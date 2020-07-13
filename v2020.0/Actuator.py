@@ -59,7 +59,7 @@ try:
 	from gpiozero import TimeOfDay
 
 	# Allow control of output devices such as Motors, Servos, LEDs, and Relays
-	from gpiozero import Motor, Servo, LED, Energenie, OutputDevice
+	from gpiozero import Motor, Servo, LED, Energenie, OutputDevice, AngularServo
 
 except ImportError:
 	#TODO DO LOW LEVEL PIN CONTROL THAT WORKS EVER WHERE? http://wiringpi.com/the-gpio-utility/
@@ -98,6 +98,8 @@ class Actuator:
 	VCC_5V = 2
 	VCC_5V_NAME = "BOARD2"        		# 5 Volts @ upto ~1.5 Amps (Power Adapter - Pi usgae) = 7.5 Watts https://pinout.xyz/pinout/pin2_5v_power
 	GND = "BOARD6&9&14&20&25&30&34&39"	# Digital Ground (0 Volts) https://pinout.xyz/pinout/ground
+	I2C_SCL = 5
+	I2C_SDA = 3
 
 	# Negative to NOT confuse it with Pi BOARD 12 https://pinout.xyz/pinout/pin12_gpio18
 	HIGH_PWR_5V = 5					# 5.00 Volts @ upto 5.0 Amps = 25.0 Watts to power Pi, force / load cell sensor and servos
@@ -134,15 +136,15 @@ class Actuator:
 		wires = np.empty(numOfWires, dtype=object)   # TODO wires = ndarray((len(pins),),int) OR wires = [None] * len(pins) 				# Create an array on same length as pins[?, ?, ?]
 		for i in range(numOfWires):
 			#TODO REMOVE print("PIN: "  + repr(i))
-			self.wires[i] = pins[i]
+			wires[i] = pins[i]
 
 		self.partNumber = partNumber
 		self.forwardDirection = direction
 
 		# The last wire in array is the PWM control pin
-		tempServoObject = Servo(pins[0]) #TODO REMOVE BECAUSE TO SIMPLE AN OBJECT
+		tempServoObject = Servo(pins[0]) #TODO REMOVE BECAUSE TO SIMPLE AN OBJECT # cannot control high power pin will fail for unit test
 		#tempServoObject = gpiozero.Servo(pins[0]) #TODO REMOVE BECAUSE TO SIMPLE AN OBJECT
-		tempAngularServoObject = AngularSevo(wires[len(wires)-1])
+		tempAngularServoObject = AngularSevo(wires[len(wires)-1]) 
 
     	# The last two wires in array are the INPUT control pins
 		tempMotorObject = Motor(wires[len(wires)-2], wires[len(wires)-1])
@@ -271,9 +273,9 @@ class Actuator:
 
 
     def UnitTest():
-	    pins = [HIGH_PWR_12V, GND, I2C_SDA, I2C_SCL]
-	    coconutLiftingLinearMotor1 = Actuator("L", pins, "PA-07-12-5V", Actuator.LINEAR_OUT)
-	    coconutLiftingLinearMotor2 = Actuator("L", pins, "PA-07-12-5V", Actuator.LINEAR_OUT)
+	    pins = [Actuator.HIGH_PWR_12V, Actuator.GND, Actuator.I2C_SDA, Actuator.I2C_SCL]
+	    coconutLiftingLinearMotor1 = Actuator("L", "ID", pins, "PA-07-12-5V", Actuator.LINEAR_OUT) # included ID
+	    coconutLiftingLinearMotor2 = Actuator("L", "ID", pins, "PA-07-12-5V", Actuator.LINEAR_OUT)  # included ID
 	    coconutLiftingLinearMotor1.Run(Actuator.N_A, 1, Actuator.N_A, Actuator.FORWARD)
 	    coconutLiftingLinearMotor2.Run(Actuator.N_A, 1, Actuator.N_A, Actuator.FORWARD)
 
@@ -284,12 +286,12 @@ if __name__ == "__main__":
 		Actuator.UnitTest()
 		relay = OutputDevice(8) #BCM-8
 		relay.on()
-		time.sleep(20) # seconds or milliseconds?
+		sleep(20) # seconds or milliseconds?
 		relay.off()
 	except NameError:
 		currentProgramFilename = os.path.basename(__file__)
 		NameDebugObject = Debug(True, currentProgramFilename)
-    	NameDebugObject.Dprint(DebugObject, "WARNING: IDIOT! You are running code on Mac or PC (NOT a Raspberry Pi 4), thus hardware control is not possible.")
+    		NameDebugObject.Dprint("WARNING: IDIOT! You are running code on Mac or PC (NOT a Raspberry Pi 4), thus hardware control is not possible.")
 
-	self.DebugObject.Dprint("END ACTUATOR.PY MAIN")
+		NameDebugObject.Dprint("END ACTUATOR.PY MAIN")
 
